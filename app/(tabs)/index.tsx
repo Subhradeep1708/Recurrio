@@ -8,6 +8,7 @@ import { HOME_BALANCE, HOME_SUBSCRIPTIONS, HOME_USER, UPCOMING_SUBSCRIPTIONS } f
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import { formatCurrency } from "@/lib/utils";
+import { useUser } from '@clerk/expo';
 import dayjs from "dayjs";
 import { styled } from 'nativewind';
 import { useState } from "react";
@@ -18,6 +19,9 @@ const SafeAreaView = styled(RNSafeAreaView);
 export default function App() {
 
 	const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
+	const { user } = useUser();
+	const avatarSource = user?.imageUrl ? { uri: user.imageUrl } : images.avatar;
+	const userName = user?.fullName?.trim() || [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || HOME_USER.name;
 
 	return (
 		<SafeAreaView  className="flex-1 bg-background p-5">
@@ -28,8 +32,8 @@ export default function App() {
 							{/* header */}
 							<View className="home-header">
 								<View className="home-user">
-									<Image source={images.avatar} className="home-avatar" />
-									<Text className="home-user-name">{HOME_USER.name}</Text>
+									<Image source={avatarSource} className="home-avatar" />
+									<Text className="home-user-name">{userName}</Text>
 								</View>
 
 								<Image source={icons.add} className="home-add-icon" />
@@ -57,7 +61,7 @@ export default function App() {
 									data={UPCOMING_SUBSCRIPTIONS}
 									horizontal
 									showsHorizontalScrollIndicator={false}
-									renderItem={({ item }) => <UpcomingSubscriptionCard data={item} />}
+									renderItem={({ item }) => <UpcomingSubscriptionCard {...item} />}
 									keyExtractor={(item) => item.id}
 									ListEmptyComponent={() => (
 										<Text className="home-empty-state">No upcoming subscriptions</Text>
