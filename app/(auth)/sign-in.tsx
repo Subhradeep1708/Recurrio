@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
-import { getAuthErrorMessage, normalizeEmail, validateConfirmationCode, validateEmail, validatePassword } from '@/lib/auth';
+import { getAuthErrorMessage, normalizeEmail, validateConfirmationCode, validateEmail, validateSignInPassword } from '@/lib/auth';
 
 const SafeAreaView = styled(RNSafeAreaView);
 const authInputStyle = {
@@ -33,6 +33,7 @@ const SignIn = () => {
   const [emailCode, setEmailCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationMode, setVerificationMode] = useState<'client_trust' | 'second_factor' | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
 
@@ -66,7 +67,7 @@ const SignIn = () => {
       return;
     }
 
-    const passwordError = validatePassword(password);
+    const passwordError = validateSignInPassword(password);
     if (passwordError) {
       setErrorMessage(passwordError);
       return;
@@ -90,18 +91,37 @@ const SignIn = () => {
       return;
     }
 
-    const emailCodeFactor = signIn.supportedSecondFactors?.find(
-      (factor) => factor.strategy === 'email_code',
-    );
+    if (signIn.status === 'needs_client_trust') {
+      const { error: sendError } = await signIn.mfa.sendEmailCode();
+      if (sendError) {
+        setErrorMessage(getAuthErrorMessage(sendError));
+        return;
+      }
 
-    if (signIn.status === 'needs_client_trust' || signIn.status === 'needs_second_factor') {
+      setInfoMessage(`We sent a verification code to ${normalizeEmail(emailAddress)}.`);
+      setVerificationMode('client_trust');
+      setIsVerifying(true);
+      return;
+    }
+
+    if (signIn.status === 'needs_second_factor') {
+      const emailCodeFactor = signIn.supportedSecondFactors?.find(
+        (factor) => factor.strategy === 'email_code',
+      );
+
       if (!emailCodeFactor) {
         setErrorMessage('Additional verification is required for this account.');
         return;
       }
 
-      await signIn.mfa.sendEmailCode();
+      const { error: sendError } = await signIn.mfa.sendEmailCode();
+      if (sendError) {
+        setErrorMessage(getAuthErrorMessage(sendError));
+        return;
+      }
+
       setInfoMessage(`We sent a verification code to ${normalizeEmail(emailAddress)}.`);
+      setVerificationMode('second_factor');
       setIsVerifying(true);
       return;
     }
@@ -143,7 +163,12 @@ const SignIn = () => {
     }
 
     setErrorMessage('');
-    await signIn.mfa.sendEmailCode();
+    const { error } = await signIn.mfa.sendEmailCode();
+    if (error) {
+      setErrorMessage(getAuthErrorMessage(error));
+      return;
+    }
+
     setInfoMessage('A fresh code has been sent.');
   };
 
@@ -232,6 +257,7 @@ const SignIn = () => {
                 <Pressable
                   onPress={() => {
                     setIsVerifying(false);
+                    setVerificationMode(null);
                     setEmailCode('');
                     setErrorMessage('');
                     setInfoMessage('');

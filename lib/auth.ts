@@ -14,6 +14,14 @@ export const validateEmail = (value: string) => {
   return '';
 };
 
+export const validateSignInPassword = (value: string) => {
+  if (!value) {
+    return 'Enter your password';
+  }
+
+  return '';
+};
+
 export const validatePassword = (value: string) => {
   if (!value) {
     return 'Create a password';

@@ -144,7 +144,12 @@ const SignUp = () => {
     }
 
     setErrorMessage('');
-    await signUp.verifications.sendEmailCode();
+    const sendCodeResult = await signUp.verifications.sendEmailCode();
+    if (sendCodeResult?.error) {
+      setErrorMessage(getAuthErrorMessage(sendCodeResult.error));
+      return;
+    }
+
     setInfoMessage('A fresh verification code has been sent.');
   };
 
