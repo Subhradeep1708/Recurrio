@@ -2,6 +2,7 @@ import { useAuth, useUser } from '@clerk/expo';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { styled } from 'nativewind';
+import { usePostHog } from 'posthog-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -45,6 +46,7 @@ const supportItems = [
 
 const Settings = () => {
   const router = useRouter();
+  const posthog = usePostHog();
   const { isLoaded, signOut } = useAuth();
   const { user } = useUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -63,6 +65,8 @@ const Settings = () => {
     setIsLoggingOut(true);
 
     try {
+      posthog?.capture('user_logged_out');
+      posthog?.reset();
       await signOut();
       router.replace('/(auth)/sign-in');
     } finally {

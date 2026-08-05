@@ -11,6 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useUser } from '@clerk/expo';
 import dayjs from "dayjs";
 import { styled } from 'nativewind';
+import { usePostHog } from 'posthog-react-native';
 import { useState } from "react";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
@@ -20,6 +21,7 @@ export default function App() {
 
 	const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
 	const { user } = useUser();
+	const posthog = usePostHog();
 	const avatarSource = user?.imageUrl ? { uri: user.imageUrl } : images.avatar;
 	const userName = user?.fullName?.trim() || [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || HOME_USER.name;
 
@@ -81,9 +83,12 @@ export default function App() {
 							{...item}
 							expanded={expandedSubscriptionId === item.id}
 							onPress={() => {
-								setExpandedSubscriptionId((currentId) => (
-									currentId === item.id ? null : item.id
-								));
+								const isExpanding = expandedSubscriptionId !== item.id;
+								posthog?.capture('subscription_details_toggled', {
+									subscription_id: item.id,
+									action: isExpanding ? 'expanded' : 'collapsed',
+								});
+								setExpandedSubscriptionId(isExpanding ? item.id : null);
 							}}
 						/>
 					}

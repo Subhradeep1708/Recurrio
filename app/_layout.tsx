@@ -3,7 +3,9 @@ import { ClerkProvider } from '@clerk/expo';
 import { tokenCache } from '@clerk/expo/token-cache';
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack } from "expo-router";
+import { PostHogErrorBoundary, PostHogProvider } from 'posthog-react-native';
 import { useEffect } from 'react';
+import { posthog } from '@/lib/posthog';
 import { Text, View } from 'react-native';
 
 SplashScreen.preventAutoHideAsync(); // Prevents the splash screen from auto-hiding before the fonts are loaded
@@ -54,9 +56,24 @@ export default function RootLayout() {
 
   if (!fontsLoaded) return null;
 
-  return (
+  const content = (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <PostHogErrorBoundary
+        fallback={() => (
+          <View className="flex-1 items-center justify-center bg-background px-6">
+            <Text className="mb-2 text-center font-sans-bold text-lg text-foreground">
+              Something went wrong
+            </Text>
+            <Text className="text-center font-sans-regular text-sm text-foreground/70">
+              Please restart the app and try again.
+            </Text>
+          </View>
+        )}
+      >
+        <Stack screenOptions={{ headerShown: false }} />
+      </PostHogErrorBoundary>
     </ClerkProvider>
   );
+
+  return posthog ? <PostHogProvider client={posthog}>{content}</PostHogProvider> : content;
 }
