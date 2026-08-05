@@ -51,7 +51,7 @@ const Subscriptions = () => {
           </View>
         )}
         ListEmptyComponent={
-          <View className="px-5 py-8 items-center">
+          <View className="px-5 py-8 items-center ">
             <Text className="text-sm font-sans-medium text-primary/60 text-center">
               {searchQuery.trim()
                 ? `No subscriptions found matching "${searchQuery}"`
@@ -64,6 +64,7 @@ const Subscriptions = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        contentContainerClassName="pb-30"
       />
     </SafeAreaView>
   )
