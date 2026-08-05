@@ -28,16 +28,16 @@ export default function App() {
 	const userName = user?.fullName?.trim() || [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || HOME_USER.name;
 
 	const [isModalVisible, setIsModalVisible] = useState(false);
-	const { subscriptions, addSubscription } = useSubscriptionStore();
+	const { subscriptions, addSubscription, analyticsConsent } = useSubscriptionStore();
 
 	const handleCreateSubscription = (newSubscription: Subscription) => {
 		addSubscription(newSubscription);
-		posthog.capture('subscription_created', {
-			subscription_name: newSubscription.name,
-			subscription_price: newSubscription.price,
-			subscription_frequency: newSubscription.frequency,
-			subscription_category: newSubscription.category ?? 'Other',
-		});
+		if (analyticsConsent) {
+			posthog?.capture('subscription_created', {
+				subscription_frequency: newSubscription.frequency,
+				subscription_category: newSubscription.category ?? 'Other',
+			});
+		}
 	};
 
 
@@ -54,7 +54,11 @@ export default function App() {
 								<Text className="home-user-name">{userName}</Text>
 							</View>
 
-							<Pressable onPress={() => setIsModalVisible(true)}>
+							<Pressable 
+								onPress={() => setIsModalVisible(true)}
+								accessibilityRole="button"
+								accessibilityLabel="Create subscription"
+							>
 								<Image source={icons.add} className="home-add-icon" />
 							</Pressable>
 						</View>
@@ -118,7 +122,7 @@ export default function App() {
 				extraData={expandedSubscriptionId}
 				ItemSeparatorComponent={() => <View className="h-4" />}
 				showsVerticalScrollIndicator={false}
-				contentContainerClassName="pb-20"
+				contentContainerClassName="pb-30"
 			/>
 
 			<Subscriptions

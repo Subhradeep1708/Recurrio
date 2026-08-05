@@ -1,7 +1,6 @@
 import { icons } from '@/constants/icons';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import { usePostHog } from 'posthog-react-native';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
@@ -31,14 +30,13 @@ const CreateSubscriptionModal = ({ visible, onClose, onSubmit }: CreateSubscript
     const [price, setPrice] = useState('');
     const [frequency, setFrequency] = useState<Frequency>('Monthly');
     const [category, setCategory] = useState<Category>('Other');
-    const posthog = usePostHog();
 
     // Improved price validation
     const isValidPrice = () => {
         const trimmedPrice = price.trim();
         if (!trimmedPrice) return false;
-        // Strict numeric pattern check
-        if (!/^\s*[+-]?(\d+(\.\d+)?|\.\d+)\s*$/.test(trimmedPrice)) return false;
+        // Strict numeric pattern check with at most 2 decimal places
+        if (!/^\s*[+-]?(\d+(\.\d{1,2})?|\.\d{1,2})\s*$/.test(trimmedPrice)) return false;
         const numValue = Number(trimmedPrice);
         return Number.isFinite(numValue) && numValue > 0;
     };
@@ -68,13 +66,6 @@ const CreateSubscriptionModal = ({ visible, onClose, onSubmit }: CreateSubscript
         };
 
         onSubmit(newSubscription);
-
-        posthog.capture('subscription_created', {
-            subscription_name: name.trim(),
-            subscription_price: priceValue,
-            subscription_frequency: frequency,
-            subscription_category: category,
-        })
 
         resetForm();
         onClose();
@@ -108,7 +99,12 @@ const CreateSubscriptionModal = ({ visible, onClose, onSubmit }: CreateSubscript
                     <Pressable className="modal-container" onPress={(e) => e.stopPropagation()}>
                         <View className="modal-header">
                             <Text className="modal-title">New Subscription</Text>
-                            <Pressable className="modal-close" onPress={handleClose}>
+                            <Pressable 
+                                className="modal-close" 
+                                onPress={handleClose}
+                                accessibilityRole="button"
+                                accessibilityLabel="Close create subscription dialog"
+                            >
                                 <Text className="modal-close-text">✕</Text>
                             </Pressable>
                         </View>
