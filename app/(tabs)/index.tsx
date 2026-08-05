@@ -1,12 +1,14 @@
 import "@/global.css";
-import { FlatList, Image, Text, View } from "react-native";
+import { FlatList, Image, Pressable, Text, View } from "react-native";
 
+import Subscriptions from "@/components/CreateSubscriptionModal";
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
-import { HOME_BALANCE, HOME_SUBSCRIPTIONS, HOME_USER, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
+import { HOME_BALANCE, HOME_USER, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
+import { useSubscriptionStore } from "@/lib/SubscriptionStore";
 import { formatCurrency } from "@/lib/utils";
 import { useUser } from '@clerk/expo';
 import dayjs from "dayjs";
@@ -25,6 +27,20 @@ export default function App() {
 	const avatarSource = user?.imageUrl ? { uri: user.imageUrl } : images.avatar;
 	const userName = user?.fullName?.trim() || [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || HOME_USER.name;
 
+	const [isModalVisible, setIsModalVisible] = useState(false);
+	const { subscriptions, addSubscription } = useSubscriptionStore();
+
+	const handleCreateSubscription = (newSubscription: Subscription) => {
+		addSubscription(newSubscription);
+		posthog.capture('subscription_created', {
+			subscription_name: newSubscription.name,
+			subscription_price: newSubscription.price,
+			subscription_frequency: newSubscription.frequency,
+			subscription_category: newSubscription.category ?? 'Other',
+		});
+	};
+
+
 	return (
 		<SafeAreaView className="flex-1 bg-background">
 			{/* Inside All subscriptions Flatlist's header all top component goes so 1 vertical flatlist exists */}
@@ -38,7 +54,9 @@ export default function App() {
 								<Text className="home-user-name">{userName}</Text>
 							</View>
 
-							<Image source={icons.add} className="home-add-icon" />
+							<Pressable onPress={() => setIsModalVisible(true)}>
+								<Image source={icons.add} className="home-add-icon" />
+							</Pressable>
 						</View>
 
 						{/* balance */}
@@ -76,7 +94,7 @@ export default function App() {
 					</View>
 				)}
 
-				data={HOME_SUBSCRIPTIONS}
+				data={subscriptions}
 				keyExtractor={(item) => item.id}
 				renderItem={({ item }) =>
 					<View className="px-5">
@@ -101,6 +119,12 @@ export default function App() {
 				ItemSeparatorComponent={() => <View className="h-4" />}
 				showsVerticalScrollIndicator={false}
 				contentContainerClassName="pb-20"
+			/>
+
+			<Subscriptions
+				visible={isModalVisible}
+				onClose={() => setIsModalVisible(false)}
+				onSubmit={handleCreateSubscription}
 			/>
 		</SafeAreaView>
 	);

@@ -56,8 +56,8 @@ const SignUp = () => {
   const finalizeSession = async () => {
     await signUp?.finalize({
       navigate: ({ session }) => {
-        if (session?.userId) {
-          posthog?.identify(session.userId);
+        if (session?.user?.id) {
+          posthog?.identify(session.user.id);
           posthog?.capture('account_created');
         }
 

@@ -29,5 +29,4 @@ export const posthog = missingConfiguration
           console: false,
         },
       },
-      debug: __DEV__,
     })
