@@ -2,28 +2,15 @@ import { useAuth, useUser } from '@clerk/expo';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { styled } from 'nativewind';
+import { usePostHog } from 'posthog-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 import images from '@/constants/images';
+import { useSubscriptionStore } from '@/lib/SubscriptionStore';
 
 const SafeAreaView = styled(RNSafeAreaView);
-
-const preferenceItems = [
-  {
-    label: 'Push notifications',
-    description: 'Get reminders for renewals and billing updates.',
-    value: true,
-    onValueChange: () => undefined,
-  },
-  {
-    label: 'Email alerts',
-    description: 'Receive product updates and security notices.',
-    value: true,
-    onValueChange: () => undefined,
-  },
-] as const;
 
 const supportItems = [
   {
@@ -45,6 +32,29 @@ const supportItems = [
 
 const Settings = () => {
   const router = useRouter();
+  const { analyticsConsent, setAnalyticsConsent } = useSubscriptionStore();
+
+  const preferenceItems = [
+    {
+      label: 'Push notifications',
+      description: 'Get reminders for renewals and billing updates.',
+      value: true,
+      onValueChange: () => undefined,
+    },
+    {
+      label: 'Email alerts',
+      description: 'Receive product updates and security notices.',
+      value: true,
+      onValueChange: () => undefined,
+    },
+    {
+      label: 'Anonymous analytics',
+      description: 'Share anonymous usage data to help us improve the app.',
+      value: analyticsConsent,
+      onValueChange: setAnalyticsConsent,
+    },
+  ];
+  const posthog = usePostHog();
   const { isLoaded, signOut } = useAuth();
   const { user } = useUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -63,7 +73,9 @@ const Settings = () => {
     setIsLoggingOut(true);
 
     try {
+      posthog?.capture('user_logged_out');
       await signOut();
+      posthog?.reset();
       router.replace('/(auth)/sign-in');
     } finally {
       setIsLoggingOut(false);

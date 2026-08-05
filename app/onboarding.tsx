@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { styled } from 'nativewind';
+import { usePostHog } from 'posthog-react-native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -7,6 +8,12 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 const Onboarding = () => {
   const router = useRouter();
+  const posthog = usePostHog();
+
+  const handleContinue = () => {
+    posthog?.capture('onboarding_completed');
+    router.replace('/(tabs)');
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background px-5">
@@ -19,7 +26,7 @@ const Onboarding = () => {
             Your account is ready. If Clerk places you here for a pending task, you can continue into the app after setup.
           </Text>
 
-          <Pressable onPress={() => router.replace('/(tabs)')} className="auth-button mt-6">
+          <Pressable onPress={handleContinue} className="auth-button mt-6">
             <Text className="auth-button-text">Continue to app</Text>
           </Pressable>
         </View>

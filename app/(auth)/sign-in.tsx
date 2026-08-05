@@ -1,5 +1,6 @@
 import { useSignIn } from '@clerk/expo';
 import { useRouter } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
 import { styled } from 'nativewind';
 import { useState } from 'react';
 import {
@@ -26,6 +27,7 @@ const authInputStyle = {
 
 const SignIn = () => {
   const router = useRouter();
+  const posthog = usePostHog();
   const { signIn, fetchStatus } = useSignIn();
 
   const [emailAddress, setEmailAddress] = useState('');
@@ -46,6 +48,11 @@ const SignIn = () => {
   const finalizeSession = async () => {
     await signIn?.finalize({
       navigate: ({ session }) => {
+        if (session?.user?.id) {
+          posthog?.identify(session.user.id);
+          posthog?.capture('user_signed_in');
+        }
+
         if (session?.currentTask) {
           router.replace('/onboarding');
           return;

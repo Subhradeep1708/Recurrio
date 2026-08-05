@@ -18,6 +18,7 @@ declare global {
         name: string;
         plan?: string;
         category?: string;
+        frequency: string;
         paymentMethod?: string;
         status?: string;
         startDate?: string;
@@ -53,3 +54,4 @@ declare global {
 }
 
 export { };
+
