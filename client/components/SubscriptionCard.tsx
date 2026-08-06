@@ -1,0 +1,84 @@
+import { formatCurrency, formatStatusLabel, formatSubscriptionDateTime } from '@/lib/utils'
+import clsx from 'clsx'
+import { Image, Pressable, Text, View } from 'react-native'
+import { icons, IconKey } from '@/constants/icons'
+
+const SubscriptionCard = ({ name, price, currency, icon, billing, color, category, plan, renewalDate, onPress, expanded, paymentMethod, startDate, status }: SubscriptionCardProps) => {
+    const resolvedIcon = typeof icon === 'string' ? (icons[icon as IconKey] || icons.wallet) : icon;
+
+    return (
+        <Pressable
+            onPress={onPress}
+            className={clsx('sub-card', expanded ? 'sub-card-expanded' : 'bg-card')}
+            style={!expanded && color ? { backgroundColor: color } : undefined}
+        >
+            <View className="sub-head">
+                <View className="sub-main">
+                    <Image source={resolvedIcon} className="sub-icon" />
+                    <View className="sub-copy">
+                        <Text numberOfLines={1} className='sub-title'>{name}</Text>
+                        <Text numberOfLines={1} ellipsizeMode='tail' className='sub-meta'>
+                            {category?.trim() || plan?.trim() || (renewalDate ? formatSubscriptionDateTime(renewalDate) : '')}
+                        </Text>
+                    </View>
+                </View>
+
+                <View className="sub-price-box">
+                    <Text className='sub-price'>{formatCurrency(price, currency)}</Text>
+                    <Text className='sub-billing'>{billing}</Text>
+                </View>
+            </View>
+
+            {expanded && (
+                <View className="sub-body">
+                    {/* <Text className='sub-expanded-title'>Subscription Details</Text> */}
+                    <View className="sub-details">
+                        <View className="sub-row">
+                            <View className="sub-row-copy">
+                                <Text className='sub-label'>Payment:</Text>
+                                <Text className='sub-value' numberOfLines={1} ellipsizeMode='tail'>
+                                    {paymentMethod?.trim() || 'N/A'}
+                                </Text>
+                            </View>
+                        </View>
+                        <View className="sub-row">
+                            <View className="sub-row-copy">
+                                <Text className='sub-label'>Category:</Text>
+                                <Text className='sub-value' numberOfLines={1} ellipsizeMode='tail'>
+                                    {category?.trim() || plan?.trim() || 'N/A'}
+                                </Text>
+                            </View>
+                        </View>
+                        <View className="sub-row">
+                            <View className="sub-row-copy">
+                                <Text className='sub-label'>Start date:</Text>
+                                <Text className='sub-value' numberOfLines={1} ellipsizeMode='tail'>
+                                    {formatSubscriptionDateTime(startDate, currency)}
+                                </Text>
+                            </View>
+                        </View>
+                        <View className="sub-row">
+                            <View className="sub-row-copy">
+                                <Text className='sub-label'>Renewal date:</Text>
+                                <Text className='sub-value' numberOfLines={1} ellipsizeMode='tail'>
+                                    {formatSubscriptionDateTime(renewalDate, currency)}
+                                </Text>
+                            </View>
+                        </View>
+                        <View className="sub-row">
+                            <View className="sub-row-copy">
+                                <Text className='sub-label'>Status:</Text>
+                                <Text className='sub-value' numberOfLines={1} ellipsizeMode='tail'>
+                                    {formatStatusLabel(status)}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+
+                </View>
+            )}
+        </Pressable>
+    )
+}
+
+export default SubscriptionCard
