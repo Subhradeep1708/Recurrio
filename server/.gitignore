@@ -45,3 +45,5 @@ app-example
 /android
 
 .vscode
+
+atlas-credentials.env
