@@ -16,26 +16,22 @@ import {
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 import { getAuthErrorMessage, normalizeEmail, validateConfirmationCode, validateEmail, validateSignInPassword } from '@/lib/auth';
+import { authInputStyle } from '@/constants/theme';
+import { useSubscriptionStore } from '@/lib/SubscriptionStore';
 
 const SafeAreaView = styled(RNSafeAreaView);
-const authInputStyle = {
-  paddingHorizontal: 18,
-  paddingVertical: 12,
-  minHeight: 58,
-  textAlignVertical: 'center' as const,
-};
 
 const SignIn = () => {
   const router = useRouter();
   const posthog = usePostHog();
   const { signIn, fetchStatus } = useSignIn();
+  const { analyticsConsent } = useSubscriptionStore();
 
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
   const [emailCode, setEmailCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationMode, setVerificationMode] = useState<'client_trust' | 'second_factor' | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
 
@@ -46,21 +42,25 @@ const SignIn = () => {
   };
 
   const finalizeSession = async () => {
-    await signIn?.finalize({
-      navigate: ({ session }) => {
-        if (session?.user?.id) {
-          posthog?.identify(session.user.id);
-          posthog?.capture('user_signed_in');
-        }
+    try {
+      await signIn?.finalize({
+        navigate: ({ session }) => {
+          if (session?.user?.id && analyticsConsent) {
+            posthog?.identify(session.user.id);
+            posthog?.capture('user_signed_in');
+          }
 
-        if (session?.currentTask) {
-          router.replace('/onboarding');
-          return;
-        }
+          if (session?.currentTask) {
+            router.replace('/onboarding');
+            return;
+          }
 
-        navigateToApp();
-      },
-    });
+          navigateToApp();
+        },
+      });
+    } catch (error) {
+      setErrorMessage(getAuthErrorMessage(error));
+    }
   };
 
   const handleSignIn = async () => {
@@ -106,7 +106,6 @@ const SignIn = () => {
       }
 
       setInfoMessage(`We sent a verification code to ${normalizeEmail(emailAddress)}.`);
-      setVerificationMode('client_trust');
       setIsVerifying(true);
       return;
     }
@@ -128,7 +127,6 @@ const SignIn = () => {
       }
 
       setInfoMessage(`We sent a verification code to ${normalizeEmail(emailAddress)}.`);
-      setVerificationMode('second_factor');
       setIsVerifying(true);
       return;
     }
@@ -236,13 +234,30 @@ const SignIn = () => {
                   />
                 </View>
 
-                {errorMessage ? <Text className="auth-error">{errorMessage}</Text> : null}
-                {infoMessage ? <Text className="auth-helper">{infoMessage}</Text> : null}
+                {errorMessage ? (
+                  <Text
+                    className="auth-error"
+                    accessibilityLiveRegion="assertive"
+                    accessibilityRole="alert"
+                  >
+                    {errorMessage}
+                  </Text>
+                ) : null}
+                {infoMessage ? (
+                  <Text
+                    className="auth-helper"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {infoMessage}
+                  </Text>
+                ) : null}
 
                 <Pressable
                   onPress={handleVerify}
                   disabled={isSubmitting}
                   className={isSubmitting ? 'auth-button auth-button-disabled' : 'auth-button'}
+                  accessibilityRole="button"
+                  accessibilityLabel="Verify and continue"
                 >
                   {isSubmitting ? (
                     <ActivityIndicator color="#fff9e3" />
@@ -257,20 +272,26 @@ const SignIn = () => {
                   <View className="auth-divider-line" />
                 </View>
 
-                <Pressable onPress={resendCode} className="auth-secondary-button">
+                <Pressable
+                  onPress={resendCode}
+                  className="auth-secondary-button"
+                  accessibilityRole="button"
+                  accessibilityLabel="Send me another code"
+                >
                   <Text className="auth-secondary-button-text">Send me another code</Text>
                 </Pressable>
 
                 <Pressable
                   onPress={() => {
                     setIsVerifying(false);
-                    setVerificationMode(null);
                     setEmailCode('');
                     setErrorMessage('');
                     setInfoMessage('');
                     signIn.reset();
                   }}
                   className="items-center"
+                  accessibilityRole="button"
+                  accessibilityLabel="Use a different account"
                 >
                   <Text className="auth-link">Use a different account</Text>
                 </Pressable>
@@ -300,7 +321,11 @@ const SignIn = () => {
                   <View className="flex-row items-center justify-between">
                     <Text className="auth-label">Password</Text>
 
-                    <Pressable onPress={() => setShowPassword((current) => !current)}>
+                    <Pressable 
+                      onPress={() => setShowPassword((current) => !current)}
+                      accessibilityRole="button"
+                      accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                    >
                       <Text className="auth-link">{showPassword ? 'Hide' : 'Show'}</Text>
                     </Pressable>
                   </View>
@@ -322,13 +347,30 @@ const SignIn = () => {
                   />
                 </View>
 
-                {errorMessage ? <Text className="auth-error">{errorMessage}</Text> : null}
-                {infoMessage ? <Text className="auth-helper">{infoMessage}</Text> : null}
+                {errorMessage ? (
+                  <Text 
+                    className="auth-error"
+                    accessibilityLiveRegion="assertive"
+                    accessibilityRole="alert"
+                  >
+                    {errorMessage}
+                  </Text>
+                ) : null}
+                {infoMessage ? (
+                  <Text 
+                    className="auth-helper"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {infoMessage}
+                  </Text>
+                ) : null}
 
                 <Pressable
                   onPress={handleSignIn}
                   disabled={isSubmitting}
                   className={isSubmitting ? 'auth-button auth-button-disabled' : 'auth-button'}
+                  accessibilityRole="button"
+                  accessibilityLabel="Sign in"
                 >
                   {isSubmitting ? (
                     <ActivityIndicator color="#fff9e3" />
@@ -345,7 +387,11 @@ const SignIn = () => {
 
                 <View className="auth-link-row">
                   <Text className="auth-link-copy">New to Recurrio?</Text>
-                  <Pressable onPress={() => router.push('/(auth)/sign-up')}>
+                  <Pressable 
+                    onPress={() => router.push('/(auth)/sign-up')}
+                    accessibilityRole="button"
+                    accessibilityLabel="Create a new Recurrio account"
+                  >
                     <Text className="auth-link">Create an account</Text>
                   </Pressable>
                 </View>

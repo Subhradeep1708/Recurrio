@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HOME_SUBSCRIPTIONS } from '@/constants/data';
 
 interface SubscriptionStore {
@@ -14,40 +13,22 @@ interface SubscriptionStore {
 
 const customStorage = {
   getItem: async (name: string): Promise<string | null> => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        return window.localStorage.getItem(name);
-      }
-      return null;
-    }
     try {
-      return await SecureStore.getItemAsync(name);
+      return await AsyncStorage.getItem(name);
     } catch {
       return null;
     }
   },
   setItem: async (name: string, value: string): Promise<void> => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem(name, value);
-      }
-      return;
-    }
     try {
-      await SecureStore.setItemAsync(name, value);
+      await AsyncStorage.setItem(name, value);
     } catch {
       // Fallback
     }
   },
   removeItem: async (name: string): Promise<void> => {
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.removeItem(name);
-      }
-      return;
-    }
     try {
-      await SecureStore.deleteItemAsync(name);
+      await AsyncStorage.removeItem(name);
     } catch {
       // Fallback
     }
@@ -67,6 +48,30 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
     {
       name: 'recurrio-subscription-store',
       storage: createJSONStorage(() => customStorage),
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        return persistedState;
+      },
+      partialize: (state) => ({
+        subscriptions: state.subscriptions
+          .filter((sub) => sub.id.startsWith('sub-'))
+          .map((sub) => ({
+            ...sub,
+            icon: 'wallet',
+          })),
+        analyticsConsent: state.analyticsConsent,
+      }),
+      merge: (persistedState: any, currentState: SubscriptionStore) => {
+        const persistedSubs = (persistedState?.subscriptions || []) as Subscription[];
+        return {
+          ...currentState,
+          ...persistedState,
+          subscriptions: [
+            ...persistedSubs,
+            ...HOME_SUBSCRIPTIONS,
+          ],
+        };
+      },
     }
   )
 );

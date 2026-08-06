@@ -36,7 +36,7 @@ If you're using [React Native Web](https://github.com/necolas/react-native-web) 
 
 ## Configuration
 
-#### With the PosthogProvider
+### With the PostHogProvider
 
 The recommended way to set up PostHog for React Native is to use the `PostHogProvider`. This utilizes the Context API to pass the PostHog client around, and enables [autocapture](/docs/product-analytics/autocapture.md).
 
@@ -77,7 +77,7 @@ const MyComponent = () => {
 }
 ```
 
-#### Without the PosthogProvider
+### Without the PostHogProvider
 
 If you prefer not to use the provider, you can initialize PostHog in its own file and import the instance from there:
 
@@ -813,6 +813,7 @@ PostHog AI
 
 ```jsx
 import { useFeatureFlag } from 'posthog-react-native'
+import { View } from 'react-native'
 const MyComponent = () => {
     const multiVariantFeature = useFeatureFlag('key-for-your-multivariate-flag')
     if (multiVariantFeature === undefined) {
@@ -822,7 +823,7 @@ const MyComponent = () => {
       // Do something
     }
     // Optional use the 'useFeatureFlagWithPayload' hook for fetching the feature flag payload
-    return <div/>
+    return <View/>
 }
 ```
 

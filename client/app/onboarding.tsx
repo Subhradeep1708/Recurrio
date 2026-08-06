@@ -5,13 +5,18 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
+import { useSubscriptionStore } from '@/lib/SubscriptionStore';
+
 const SafeAreaView = styled(RNSafeAreaView);
 const Onboarding = () => {
   const router = useRouter();
   const posthog = usePostHog();
+  const { analyticsConsent } = useSubscriptionStore();
 
   const handleContinue = () => {
-    posthog?.capture('onboarding_completed');
+    if (analyticsConsent) {
+      posthog?.capture('onboarding_completed');
+    }
     router.replace('/(tabs)');
   };
 

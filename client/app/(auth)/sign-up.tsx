@@ -23,19 +23,16 @@ import {
   validateEmail,
   validatePassword,
 } from '@/lib/auth';
+import { authInputStyle } from '@/constants/theme';
+import { useSubscriptionStore } from '@/lib/SubscriptionStore';
 
 const SafeAreaView = styled(RNSafeAreaView);
-const authInputStyle = {
-  paddingHorizontal: 14,
-  paddingVertical: 12,
-  minHeight: 58,
-  textAlignVertical: 'center' as const,
-};
 
 const SignUp = () => {
   const router = useRouter();
   const posthog = usePostHog();
   const { signUp, fetchStatus } = useSignUp();
+  const { analyticsConsent } = useSubscriptionStore();
 
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
@@ -54,21 +51,25 @@ const SignUp = () => {
   };
 
   const finalizeSession = async () => {
-    await signUp?.finalize({
-      navigate: ({ session }) => {
-        if (session?.user?.id) {
-          posthog?.identify(session.user.id);
-          posthog?.capture('account_created');
-        }
+    try {
+      await signUp?.finalize({
+        navigate: ({ session }) => {
+          if (session?.user?.id && analyticsConsent) {
+            posthog?.identify(session.user.id);
+            posthog?.capture('account_created');
+          }
 
-        if (session?.currentTask) {
-          router.replace('/onboarding');
-          return;
-        }
+          if (session?.currentTask) {
+            router.replace('/onboarding');
+            return;
+          }
 
-        navigateToApp();
-      },
-    });
+          navigateToApp();
+        },
+      });
+    } catch (error) {
+      setErrorMessage(getAuthErrorMessage(error));
+    }
   };
 
   const handleCreateAccount = async () => {
@@ -106,9 +107,9 @@ const SignUp = () => {
       return;
     }
 
-    const sendCodeResult = await signUp.verifications.sendEmailCode();
-    if (sendCodeResult?.error) {
-      setErrorMessage(getAuthErrorMessage(sendCodeResult.error));
+    const { error: sendCodeError } = await signUp.verifications.sendEmailCode();
+    if (sendCodeError) {
+      setErrorMessage(getAuthErrorMessage(sendCodeError));
       return;
     }
 
@@ -151,9 +152,9 @@ const SignUp = () => {
     }
 
     setErrorMessage('');
-    const sendCodeResult = await signUp.verifications.sendEmailCode();
-    if (sendCodeResult?.error) {
-      setErrorMessage(getAuthErrorMessage(sendCodeResult.error));
+    const { error: resendError } = await signUp.verifications.sendEmailCode();
+    if (resendError) {
+      setErrorMessage(getAuthErrorMessage(resendError));
       return;
     }
 
@@ -230,13 +231,30 @@ const SignUp = () => {
                   />
                 </View>
 
-                {errorMessage ? <Text className="auth-error">{errorMessage}</Text> : null}
-                {infoMessage ? <Text className="auth-helper">{infoMessage}</Text> : null}
+                {errorMessage ? (
+                  <Text
+                    className="auth-error"
+                    accessibilityLiveRegion="assertive"
+                    accessibilityRole="alert"
+                  >
+                    {errorMessage}
+                  </Text>
+                ) : null}
+                {infoMessage ? (
+                  <Text
+                    className="auth-helper"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {infoMessage}
+                  </Text>
+                ) : null}
 
                 <Pressable
                   onPress={handleVerify}
                   disabled={isSubmitting}
                   className={isSubmitting ? 'auth-button auth-button-disabled' : 'auth-button'}
+                  accessibilityRole="button"
+                  accessibilityLabel="Verify and finish"
                 >
                   {isSubmitting ? (
                     <ActivityIndicator color="#fff9e3" />
@@ -251,11 +269,21 @@ const SignUp = () => {
                   <View className="auth-divider-line" />
                 </View>
 
-                <Pressable onPress={resendCode} className="auth-secondary-button">
+                <Pressable
+                  onPress={resendCode}
+                  className="auth-secondary-button"
+                  accessibilityRole="button"
+                  accessibilityLabel="Send me another code"
+                >
                   <Text className="auth-secondary-button-text">Send me another code</Text>
                 </Pressable>
 
-                <Pressable onPress={restartFlow} className="items-center">
+                <Pressable
+                  onPress={restartFlow}
+                  className="items-center"
+                  accessibilityRole="button"
+                  accessibilityLabel="Use a different email"
+                >
                   <Text className="auth-link">Use a different email</Text>
                 </Pressable>
               </View>
@@ -284,7 +312,11 @@ const SignUp = () => {
                   <View className="flex-row items-center justify-between">
                     <Text className="auth-label">Password</Text>
 
-                    <Pressable onPress={() => setShowPassword((current) => !current)}>
+                    <Pressable 
+                      onPress={() => setShowPassword((current) => !current)}
+                      accessibilityRole="button"
+                      accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                    >
                       <Text className="auth-link">{showPassword ? 'Hide' : 'Show'}</Text>
                     </Pressable>
                   </View>
@@ -310,7 +342,11 @@ const SignUp = () => {
                   <View className="flex-row items-center justify-between">
                     <Text className="auth-label">Confirm password</Text>
 
-                    <Pressable onPress={() => setShowConfirmPassword((current) => !current)}>
+                    <Pressable 
+                      onPress={() => setShowConfirmPassword((current) => !current)}
+                      accessibilityRole="button"
+                      accessibilityLabel={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    >
                       <Text className="auth-link">{showConfirmPassword ? 'Hide' : 'Show'}</Text>
                     </Pressable>
                   </View>
@@ -340,13 +376,30 @@ const SignUp = () => {
                   ))}
                 </View>
 
-                {errorMessage ? <Text className="auth-error">{errorMessage}</Text> : null}
-                {infoMessage ? <Text className="auth-helper">{infoMessage}</Text> : null}
+                {errorMessage ? (
+                  <Text 
+                    className="auth-error"
+                    accessibilityLiveRegion="assertive"
+                    accessibilityRole="alert"
+                  >
+                    {errorMessage}
+                  </Text>
+                ) : null}
+                {infoMessage ? (
+                  <Text 
+                    className="auth-helper"
+                    accessibilityLiveRegion="polite"
+                  >
+                    {infoMessage}
+                  </Text>
+                ) : null}
 
                 <Pressable
                   onPress={handleCreateAccount}
                   disabled={isSubmitting}
                   className={isSubmitting ? 'auth-button auth-button-disabled' : 'auth-button'}
+                  accessibilityRole="button"
+                  accessibilityLabel="Create account"
                 >
                   {isSubmitting ? (
                     <ActivityIndicator color="#fff9e3" />
@@ -355,15 +408,13 @@ const SignUp = () => {
                   )}
                 </Pressable>
 
-                {/* <View className="auth-divider-row">
-                  <View className="auth-divider-line" />
-                  <Text className="auth-divider-text">Protected by Clerk</Text>
-                  <View className="auth-divider-line" />
-                </View> */}
-
                 <View className="auth-link-row">
                   <Text className="auth-link-copy">Already have an account?</Text>
-                  <Pressable onPress={() => router.push('/(auth)/sign-in')}>
+                  <Pressable 
+                    onPress={() => router.push('/(auth)/sign-in')}
+                    accessibilityRole="button"
+                    accessibilityLabel="Go to sign in screen"
+                  >
                     <Text className="auth-link">Sign in</Text>
                   </Pressable>
                 </View>

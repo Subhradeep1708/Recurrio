@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { icons } from "./icons";
 
 export const tabs: AppTab[] = [
@@ -9,12 +10,14 @@ export const tabs: AppTab[] = [
 
 // dummy data for the home screen
 export const HOME_USER = {
-    name: "Subhradeep Sardar",
+    name: "Guest Member",
 };
 
 export const HOME_BALANCE = {
     amount: 2489.48,
-    nextRenewalDate: "2026-03-18T09:00:00.000Z",
+    get nextRenewalDate() {
+        return dayjs().add(12, 'day').toISOString();
+    }
 };
 
 export const UPCOMING_SUBSCRIPTIONS: UpcomingSubscription[] = [

@@ -44,8 +44,16 @@ export const components = {
     },
 } as const;
 
+export const authInputStyle = {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    minHeight: 58,
+    textAlignVertical: 'center' as const,
+};
+
 export const theme = {
     colors,
     spacing,
     components,
+    authInputStyle,
 } as const;

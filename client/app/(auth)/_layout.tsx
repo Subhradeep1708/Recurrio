@@ -2,7 +2,7 @@ import '@/global.css';
 import { useAuth } from '@clerk/expo';
 import { Redirect, Stack } from "expo-router";
 
-export default function RootLayout() {
+export default function AuthLayout() {
     const { isLoaded, isSignedIn } = useAuth();
 
     if (!isLoaded) return null;

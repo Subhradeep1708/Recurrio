@@ -107,10 +107,12 @@ export default function App() {
 							expanded={expandedSubscriptionId === item.id}
 							onPress={() => {
 								const isExpanding = expandedSubscriptionId !== item.id;
-								posthog?.capture('subscription_details_toggled', {
-									subscription_id: item.id,
-									action: isExpanding ? 'expanded' : 'collapsed',
-								});
+								if (analyticsConsent) {
+									posthog?.capture('subscription_details_toggled', {
+										subscription_id: item.id,
+										action: isExpanding ? 'expanded' : 'collapsed',
+									});
+								}
 								setExpandedSubscriptionId(isExpanding ? item.id : null);
 							}}
 						/>

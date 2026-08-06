@@ -15,10 +15,13 @@ export const formatCurrency = (value: number, currency = "USD"): string => {
   }
 };
 
-export const formatSubscriptionDateTime = (value?: string): string => {
+export const formatSubscriptionDateTime = (value?: string, currency = "USD"): string => {
   if (!value) return "Not provided";
   const parsedDate = dayjs(value);
-  return parsedDate.isValid() ? parsedDate.format("MM/DD/YYYY") : "Not provided";
+  if (!parsedDate.isValid()) return "Not provided";
+  
+  const locale = currency === "INR" ? "en-IN" : "en-US";
+  return parsedDate.toDate().toLocaleDateString(locale);
 };
 
 export const formatStatusLabel = (value?: string): string => {

@@ -16,12 +16,12 @@ const supportItems = [
   {
     label: 'Privacy policy',
     description: 'Review how your account data is handled.',
-    onPress: () => Linking.openURL('https://example.com/privacy'),
+    onPress: undefined,
   },
   {
     label: 'Terms of service',
     description: 'Read the terms that govern your account.',
-    onPress: () => Linking.openURL('https://example.com/terms'),
+    onPress: undefined,
   },
   {
     label: 'Help and support',
@@ -37,21 +37,24 @@ const Settings = () => {
   const preferenceItems = [
     {
       label: 'Push notifications',
-      description: 'Get reminders for renewals and billing updates.',
-      value: true,
+      description: 'Get reminders for renewals and billing updates. (Unavailable)',
+      value: false,
       onValueChange: () => undefined,
+      disabled: true,
     },
     {
       label: 'Email alerts',
-      description: 'Receive product updates and security notices.',
-      value: true,
+      description: 'Receive product updates and security notices. (Unavailable)',
+      value: false,
       onValueChange: () => undefined,
+      disabled: true,
     },
     {
       label: 'Anonymous analytics',
       description: 'Share anonymous usage data to help us improve the app.',
       value: analyticsConsent,
       onValueChange: setAnalyticsConsent,
+      disabled: false,
     },
   ];
   const posthog = usePostHog();
@@ -73,9 +76,19 @@ const Settings = () => {
     setIsLoggingOut(true);
 
     try {
-      posthog?.capture('user_logged_out');
+      if (analyticsConsent) {
+        posthog?.capture('user_logged_out');
+      }
       await signOut();
       posthog?.reset();
+
+      // Reapply the persisted consent state immediately after reset to preserve opt-out/opt-in choice across logout
+      if (analyticsConsent) {
+        posthog?.optIn();
+      } else {
+        posthog?.optOut();
+      }
+
       router.replace('/(auth)/sign-in');
     } finally {
       setIsLoggingOut(false);
@@ -151,6 +164,7 @@ const Settings = () => {
                 <Switch
                   value={item.value}
                   onValueChange={item.onValueChange}
+                  disabled={item.disabled}
                   trackColor={{ false: '#f6eecf', true: '#ea7a53' }}
                   thumbColor="#fff9e3"
                 />
@@ -166,7 +180,12 @@ const Settings = () => {
 
           <View className="gap-3">
             {supportItems.map((item) => (
-              <Pressable key={item.label} onPress={item.onPress} className="rounded-2xl border border-border bg-background px-4 py-4">
+              <Pressable 
+                key={item.label} 
+                onPress={item.onPress} 
+                disabled={!item.onPress}
+                className="rounded-2xl border border-border bg-background px-4 py-4"
+              >
                 <Text className="text-base font-sans-bold text-foreground">{item.label}</Text>
                 <Text className="mt-1 text-sm font-sans-medium text-foreground/60">{item.description}</Text>
               </Pressable>

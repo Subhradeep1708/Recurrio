@@ -14,17 +14,17 @@ declare global {
 
     interface Subscription {
         id: string;
-        icon: ImageSourcePropType;
+        icon: ImageSourcePropType | string;
         name: string;
         plan?: string;
         category?: string;
-        frequency: string;
+        frequency: 'Monthly' | 'Yearly';
         paymentMethod?: string;
-        status?: string;
+        status?: 'active' | 'paused' | 'cancelled';
         startDate?: string;
         price: number;
         currency?: string;
-        billing: string;
+        billing: 'Monthly' | 'Yearly';
         renewalDate?: string;
         color?: string;
     }

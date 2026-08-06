@@ -1,8 +1,11 @@
 import { formatCurrency, formatStatusLabel, formatSubscriptionDateTime } from '@/lib/utils'
 import clsx from 'clsx'
 import { Image, Pressable, Text, View } from 'react-native'
+import { icons, IconKey } from '@/constants/icons'
 
 const SubscriptionCard = ({ name, price, currency, icon, billing, color, category, plan, renewalDate, onPress, expanded, paymentMethod, startDate, status }: SubscriptionCardProps) => {
+    const resolvedIcon = typeof icon === 'string' ? (icons[icon as IconKey] || icons.wallet) : icon;
+
     return (
         <Pressable
             onPress={onPress}
@@ -11,7 +14,7 @@ const SubscriptionCard = ({ name, price, currency, icon, billing, color, categor
         >
             <View className="sub-head">
                 <View className="sub-main">
-                    <Image source={icon} className="sub-icon" />
+                    <Image source={resolvedIcon} className="sub-icon" />
                     <View className="sub-copy">
                         <Text numberOfLines={1} className='sub-title'>{name}</Text>
                         <Text numberOfLines={1} ellipsizeMode='tail' className='sub-meta'>
@@ -50,7 +53,7 @@ const SubscriptionCard = ({ name, price, currency, icon, billing, color, categor
                             <View className="sub-row-copy">
                                 <Text className='sub-label'>Start date:</Text>
                                 <Text className='sub-value' numberOfLines={1} ellipsizeMode='tail'>
-                                    {startDate ? formatSubscriptionDateTime(startDate) : ''}
+                                    {formatSubscriptionDateTime(startDate, currency)}
                                 </Text>
                             </View>
                         </View>
@@ -58,7 +61,7 @@ const SubscriptionCard = ({ name, price, currency, icon, billing, color, categor
                             <View className="sub-row-copy">
                                 <Text className='sub-label'>Renewal date:</Text>
                                 <Text className='sub-value' numberOfLines={1} ellipsizeMode='tail'>
-                                    {renewalDate ? formatSubscriptionDateTime(renewalDate) : ''}
+                                    {formatSubscriptionDateTime(renewalDate, currency)}
                                 </Text>
                             </View>
                         </View>
@@ -66,7 +69,7 @@ const SubscriptionCard = ({ name, price, currency, icon, billing, color, categor
                             <View className="sub-row-copy">
                                 <Text className='sub-label'>Status:</Text>
                                 <Text className='sub-value' numberOfLines={1} ellipsizeMode='tail'>
-                                    {status ? formatStatusLabel(status) : ''}
+                                    {formatStatusLabel(status)}
                                 </Text>
                             </View>
                         </View>
