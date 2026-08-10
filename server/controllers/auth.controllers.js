@@ -1,7 +1,9 @@
 import mongoose from 'mongoose'
-import User from '../models/user.models';
+import User from '../models/user.models.js';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { JWT_EXPIRES_IN, JWT_SECRET } from '../config/env.js';
+
 
 export const signUp = async (req, res, next) => {
 
@@ -22,21 +24,24 @@ export const signUp = async (req, res, next) => {
         }
 
         // hashing the password
-        const salt = bcrypt.genSalt(10)
+        const salt = await bcrypt.genSalt(10)
 
         const hashedPassword = await bcrypt.hash(password, salt)
         // attatch session if anyhting goes wrong user wont be created
-        const newUser = await User.create({ name, email, password: hashedPassword }, { session })
+        const newUser = await User.create([{ name, email, password: hashedPassword }], JWT_SECRET)
 
-        const token = await jwt.sign({userId: newUser[0]._id})
+        const token = await jwt.sign({ userId: newUser[0]._id }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
 
         await session.commitTransaction()
         session.endSession()
 
-        res.send(201).json({
-            success : true,
+        res.status(201).json({
+            success: true,
             message: "User created successfully",
-            data: newUser[0]
+            data: {
+                token,
+                user: newUser[0]
+            }
         })
     } catch (error) {
         await session.abortTransaction();
@@ -45,14 +50,14 @@ export const signUp = async (req, res, next) => {
     }
 }
 
-export const signIn = async (req, res, next) => {
-    const { email, password } = req.body;
+// export const signIn = async (req, res, next) => {
+//     const { email, password } = req.body;
+    
+
+// }
+
+// export const signOut = async (req, res, next) => {
+//     const { email, password } = req.body;
 
 
-}
-
-export const signOut = async (req, res, next) => {
-    const { email, password } = req.body;
-
-
-}
+// }
