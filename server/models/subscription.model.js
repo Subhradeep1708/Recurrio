@@ -67,7 +67,7 @@ const subscriptionSchema = new mongoose.Schema({
 
 
 // auto calculate the renewal date if not provided
-subscriptionSchema.pre('save', function (next) {
+subscriptionSchema.pre('save', function () {
     if (this.isNew || this.isModified("startDate") || this.isModified("frequency")) {
         const renewalDate = new Date(this.startDate);
 
@@ -103,7 +103,6 @@ subscriptionSchema.pre('save', function (next) {
         this.status = "expired";
     }
 
-    next()
 })
 
 

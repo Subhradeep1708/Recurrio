@@ -9,17 +9,17 @@ export const authorize = async (req, res, next) => {
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
             token = req.headers.authorization.split(' ')[1]
         }
-        console.log("Token: ",token);
+        // console.log("Token: ",token);
 
         if (!token) {
-            return res.status(401).json({ message: 'Unauthorized no token' })
+            return res.status(401).json({ message: 'Unauthorized' })
         }
 
         const decoded = jwt.verify(token, JWT_SECRET)
-        console.log(decoded);
+        // console.log(decoded);
         const user = await User.findById(decoded.userId)
 
-        if (!user) return res.status(401).json({ message: 'Unauthorized no user' })
+        if (!user) return res.status(401).json({ message: 'Unauthorized' })
 
         // attatch the user to request and forword it 
         req.user = user
