@@ -54,6 +54,17 @@
         @apply size-12 items-center justify-center rounded-3xl bg-transparent;
     }
 
+   .tabs-icon-web {
+       @apply size-6 items-center justify-center;
+   }
+
+   .tabs-pill-web {
+       @apply size-6 items-center justify-center rounded-3xl bg-transparent;
+   }
+
+   .tabs-glyph-web {
+       @apply size-5;
+   }
     .tabs-active {
         @apply bg-accent;
     }

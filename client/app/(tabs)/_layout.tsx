@@ -19,7 +19,7 @@ const TabLayout = () => {
         return <Redirect href="/(auth)/sign-in" />;
     }
 
-    const TabIcon = ({ focused, icon }: TabIconProps) => {
+   const TabIcon = ({ focused, icon }: TabIconProps) => {
         return (
             <View className="tabs-icon">
                 <View className={clsx('tabs-pill', focused && 'tabs-active')}>
@@ -69,4 +69,4 @@ const TabLayout = () => {
     </Tabs>)
 }
 
-export default TabLayout;
+export default TabLayout ;
